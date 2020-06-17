@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<body style="background:hsl(0,0%,90%)">
+  <iframe style="position: fixed; width:300px; height:300px; box-shadow: 0 2px 4px hsla(0,0%,0%,0.1); border-radius: 4px; border: solid 1px hsl(0,0%,70%)" src="iframe.html"></iframe>
+  <script>
+    const ifrm = document.querySelector('iframe')
+    let dragging = false
+    let posStart = null
+    let screenMouseStart = null
+
+    moveIframe(100,100)
+
+    window.addEventListener('message', e => {
+      if (e.data.type === 'iframe_topleft') {
+        moveIframe(0,0)
+      } else if (e.data.type === 'iframe_topright') {
+        // Hack, don't care
+        moveIframe(999999,0)
+      } else if (e.data.type === 'drag_title_stop') {
+        dragging = false
+      } else if (e.data.type === 'drag_title_start') {
+        dragging = true
+        const pos = [ifrm.offsetLeft, ifrm.offsetTop]
+        const screenMouse = [
+          pos[0] + e.data.mouse[0],
+          pos[1] + e.data.mouse[1]
+        ]
+        posStart = pos
+        screenMouseStart = screenMouse
+      } else if (e.data.type === 'drag_title_move') {
+        const pos = [ifrm.offsetLeft, ifrm.offsetTop]
+        const screenMouse = [
+          pos[0] + e.data.mouse[0],
+          pos[1] + e.data.mouse[1]
+        ]
+
+        const dx = screenMouse[0] - screenMouseStart[0]
+        const dy = screenMouse[1] - screenMouseStart[1]
+        moveIframe(posStart[0] + dx, posStart[1] + dy)
+      }
+    }, false)
+
+    function moveIframe(x, y) {
+      const w = ifrm.offsetWidth
+      const h = ifrm.offsetHeight
+      const x1 = window.innerWidth
+      const y1 = window.innerHeight
+
+
+      x = Math.max(0, Math.min(x, x1-w))
+      y = Math.max(0, Math.min(y, y1-w))
+
+
+      ifrm.style.left = x + 'px'
+      ifrm.style.top = y + 'px'
+    }
+
+    window.onmousemove = e => {
+      if (!dragging) return
+
+
+      const screenMouse = [
+        e.clientX,
+        e.clientY
+      ]
+
+      const dx = screenMouse[0] - screenMouseStart[0]
+      const dy = screenMouse[1] - screenMouseStart[1]
+      moveIframe(posStart[0] + dx, posStart[1] + dy)
+    }
+
+    window.onmouseup = e => {
+      dragging = false
+      ifrm.contentWindow.postMessage({type: 'drag_title_should_stop'}, '*')
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<body style="background:hsl(230,50%,40%);color:white;margin:0">
+<style>
+body {
+  font-family: sans-serif;
+  font-size: 14px;
+}
+button {
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 34px;
+  height: 30px;
+  margin: 0;
+  margin-left: 1px;
+  background: hsl(230,50%,60%);
+  outline: 0;
+  box-sizing: border-box;
+  color: white;
+  padding: 0 8px;
+  border: 0;
+}
+</style>
+  <div id="title" style="cursor:move;user-select:none;border-bottom:solid 1px hsl(240,50%,55%);box-sizing: border-box;line-height: 34px; text-align: center; height:30px; background:hsl(240,50%,50%);color:hsl(0%,0%,30%)">Grab Title
+    <button style="float:right" onclick="topRight()" type="button">top-right</button>
+    <button style="float:right" onclick="topLeft()" type="button">top-left</button>
+  </div>
+  <pre style="padding:10px">
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+    Example text
+  </pre>
+  <script>
+  const title = document.querySelector('#title')
+  let dragging = false
+
+  function topRight() {
+    window.parent.postMessage({type: 'iframe_topright'}, '*')
+  }
+  function topLeft() {
+    window.parent.postMessage({type: 'iframe_topleft'}, '*')
+  }
+  title.onmousedown = e => {
+    const mouse = [e.clientX, e.clientY]
+    dragging = true
+    e.preventDefault()
+    window.parent.postMessage({type: 'drag_title_start', mouse}, '*')
+  }
+
+  window.onmousemove = e => {
+    if (!dragging) {
+      return;
+    }
+
+
+    const mouse = [e.clientX, e.clientY]
+    window.parent.postMessage({type: 'drag_title_move', mouse}, '*')
+  }
+
+  window.onmouseup = () => {
+    dragging = false
+    window.parent.postMessage({type: 'drag_title_stop'}, '*')
+  }
+
+  window.addEventListener('message', e => {
+    if (e.type === 'drag_title_should_stop') {
+      console.log('received should stop')
+      dragging = false
+    }
+  })
+  </script>
+</body>
+</html>
